@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block title %}Abuja Flavours — Authentic West African Cuisine{% endblock %}
+
+{% block content %}
+<div class="landing">
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero__bg">
+      <div class="hero__blob hero__blob--1"></div>
+      <div class="hero__blob hero__blob--2"></div>
+      <div class="hero__pattern"></div>
+    </div>
+    <div class="hero__content">
+      <span class="hero__eyebrow">West African Cuisine</span>
+      <h1 class="hero__title">
+        Taste the Soul<br>
+        <em>of Abuja</em>
+      </h1>
+      <p class="hero__subtitle">
+        Authentic flavours, lovingly prepared. From sunrise akara to midnight pepper soup — every bite tells a story.
+      </p>
+      <div class="hero__actions">
+        <a href="{% url 'signup' %}" class="btn btn--primary btn--lg">Order Now</a>
+        <a href="{% url 'login' %}" class="btn btn--ghost btn--lg">Sign In</a>
+      </div>
+    </div>
+    <div class="hero__visual">
+      <div class="hero__plate hero__plate--1">
+        <img src="https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=400&q=80" alt="Jollof Rice" loading="lazy">
+      </div>
+      <div class="hero__plate hero__plate--2">
+        <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400&q=80" alt="Pizza" loading="lazy">
+      </div>
+      <div class="hero__plate hero__plate--3">
+        <img src="https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400&q=80" alt="Noodles" loading="lazy">
+      </div>
+    </div>
+  </section>
+
+  <!-- Categories -->
+  <section class="categories-preview">
+    <div class="container">
+      <h2 class="section-title">What Are You Craving?</h2>
+      <div class="cat-grid">
+        {% for category in categories %}
+        <a href="{% url 'signup' %}" class="cat-card">
+          <span class="cat-icon">{{ category.icon }}</span>
+          <h3 class="cat-name">{{ category.name }}</h3>
+          <p class="cat-count">{{ category.meals.count }} dishes</p>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="features">
+    <div class="container">
+      <div class="features-grid">
+        <div class="feature">
+          <div class="feature__icon">🌍</div>
+          <h3>100% Authentic</h3>
+          <p>Traditional recipes passed down through generations, cooked with love and original spices.</p>
+        </div>
+        <div class="feature">
+          <div class="feature__icon">⚡</div>
+          <h3>Fast Ordering</h3>
+          <p>Browse, pick, and checkout in under two minutes. Fresh food, zero friction.</p>
+        </div>
+        <div class="feature">
+          <div class="feature__icon">💳</div>
+          <h3>Easy Payment</h3>
+          <p>Pay with EcoCash or Credit Card — secure, instant, and hassle-free.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="landing-cta">
+    <div class="container">
+      <div class="cta-card">
+        <h2>Ready to feast?</h2>
+        <p>Join thousands of food lovers enjoying authentic Abuja cuisine every day.</p>
+        <a href="{% url 'signup' %}" class="btn btn--primary btn--lg">Create Account — It's Free</a>
+      </div>
+    </div>
+  </section>
+
+</div>
+{% endblock %}

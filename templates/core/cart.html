@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% block title %}Your Cart — Abuja Flavours{% endblock %}
+
+{% block content %}
+<div class="cart-page">
+  <div class="container">
+
+    <div class="cart-header">
+      <h1 class="page-title">Your <em>Cart</em></h1>
+      <a href="{% url 'menu' %}" class="btn btn--ghost btn--sm">← Continue Shopping</a>
+    </div>
+
+    {% if cart_items %}
+    <div class="cart-layout">
+
+      <!-- Items -->
+      <div class="cart-items" id="cartItems">
+        {% for item in cart_items %}
+        <div class="cart-item" id="cartItem{{ item.id }}" data-item-id="{{ item.id }}">
+          <div class="cart-item__img-wrap">
+            <img
+              src="{{ item.meal.image_url }}"
+              alt="{{ item.meal.name }}"
+              class="cart-item__img"
+              onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200&q=80'"
+            >
+          </div>
+          <div class="cart-item__details">
+            <div class="cart-item__top">
+              <div>
+                <h3 class="cart-item__name">{{ item.meal.name }}</h3>
+                <span class="cart-item__category">{{ item.meal.category.icon }} {{ item.meal.category.name }}</span>
+              </div>
+              <button class="cart-item__remove" data-item-id="{{ item.id }}" data-action="remove" title="Remove item">✕</button>
+            </div>
+            <div class="cart-item__bottom">
+              <div class="qty-stepper">
+                <button class="qty-btn cart-update-btn" data-item-id="{{ item.id }}" data-action="decrease">−</button>
+                <span class="qty-value" id="qty{{ item.id }}">{{ item.quantity }}</span>
+                <button class="qty-btn cart-update-btn" data-item-id="{{ item.id }}" data-action="increase">+</button>
+              </div>
+              <span class="cart-item__price" id="price{{ item.id }}">${{ item.subtotal }}</span>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Summary -->
+      <div class="cart-summary" id="cartSummary">
+        <h2 class="summary-title">Order Summary</h2>
+        <div class="summary-row">
+          <span>Subtotal</span>
+          <span id="summaryGross">${{ gross_total }}</span>
+        </div>
+        <div class="summary-row summary-row--tax">
+          <span>Tax (15%)</span>
+          <span id="summaryTax">${{ tax }}</span>
+        </div>
+        <div class="summary-row summary-row--total">
+          <span>Total</span>
+          <span id="summaryNet">${{ net_total }}</span>
+        </div>
+        <a href="{% url 'checkout' %}" class="btn btn--primary btn--full btn--lg" id="checkoutBtn">
+          Proceed to Checkout →
+        </a>
+        <p class="summary-note">Free delivery on all orders 🎉</p>
+      </div>
+
+    </div>
+
+    {% else %}
+    <div class="empty-cart">
+      <div class="empty-cart__icon">🛒</div>
+      <h2>Your cart is empty</h2>
+      <p>Looks like you haven't added anything yet. Explore our menu!</p>
+      <a href="{% url 'menu' %}" class="btn btn--primary btn--lg">Browse Menu</a>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+
+<input type="hidden" id="csrfToken" value="{{ csrf_token }}">
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function updateCartItem(itemId, action) {
+  const csrf = document.getElementById('csrfToken').value;
+  try {
+    const res = await fetch(`/api/cart/update/${itemId}/`, {
+      method: 'POST',
+      headers: {'X-CSRFToken': csrf, 'Content-Type': 'application/x-www-form-urlencoded'},
+      body: `action=${action}`
+    });
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById('cartBadge').textContent = data.cart_count;
+      if (data.removed) {
+        const el = document.getElementById(`cartItem${itemId}`);
+        el.style.opacity = '0';
+        el.style.transform = 'translateX(-20px)';
+        setTimeout(() => {
+          el.remove();
+          checkEmpty();
+          if (action !== 'remove') reloadSummary();
+        }, 300);
+      } else {
+        document.getElementById(`qty${itemId}`).textContent = data.quantity;
+        document.getElementById(`price${itemId}`).textContent = `$${data.subtotal.toFixed(2)}`;
+        reloadSummary();
+      }
+    }
+  } catch(e) {
+    showToast('Update failed, please try again.', 'error');
+  }
+}
+
+function checkEmpty() {
+  if (document.querySelectorAll('.cart-item').length === 0) {
+    location.reload();
+  }
+}
+
+function reloadSummary() {
+  // Recalculate from current page values
+  location.reload();
+}
+
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('cart-update-btn') || e.target.classList.contains('cart-item__remove')) {
+    const itemId = e.target.dataset.itemId;
+    const action = e.target.dataset.action;
+    updateCartItem(itemId, action);
+  }
+});
+</script>
+{% endblock %}

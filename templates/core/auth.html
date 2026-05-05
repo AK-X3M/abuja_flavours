@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block title %}{% if mode == 'signup' %}Create Account{% else %}Sign In{% endif %} — Abuja Flavours{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="auth-visual">
+    <div class="auth-visual__bg"></div>
+    <div class="auth-visual__content">
+      <a href="{% url 'landing' %}" class="auth-brand">
+        <span>🍽</span> Abuja Flavours
+      </a>
+      <blockquote class="auth-quote">
+        "Food is not just eating energy. It's an experience."
+        <cite>— Guy Fieri</cite>
+      </blockquote>
+      <div class="auth-dishes">
+        <img src="https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=300&q=80" alt="Jollof Rice" class="auth-dish auth-dish--1">
+        <img src="https://images.unsplash.com/photo-1547592180-85f173990554?w=300&q=80" alt="Soup" class="auth-dish auth-dish--2">
+      </div>
+    </div>
+  </div>
+
+  <div class="auth-form-panel">
+    <div class="auth-form-wrap">
+      <h1 class="auth-title">
+        {% if mode == 'signup' %}
+          Join the table 🍽
+        {% else %}
+          Welcome back 👋
+        {% endif %}
+      </h1>
+      <p class="auth-subtitle">
+        {% if mode == 'signup' %}
+          Create an account to start ordering.
+        {% else %}
+          Sign in to access your account.
+        {% endif %}
+      </p>
+
+      {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert--{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+
+      <form method="POST" class="auth-form" novalidate>
+        {% csrf_token %}
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input type="text" name="username" class="form-input" placeholder="Your username" required autofocus>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" name="password" class="form-input" placeholder="••••••••" required>
+        </div>
+        {% if mode == 'signup' %}
+        <div class="form-group">
+          <label class="form-label">Confirm Password</label>
+          <input type="password" name="confirm_password" class="form-input" placeholder="••••••••" required>
+        </div>
+        {% endif %}
+        <button type="submit" class="btn btn--primary btn--full">
+          {% if mode == 'signup' %}Create Account{% else %}Sign In{% endif %}
+        </button>
+      </form>
+
+      <p class="auth-switch">
+        {% if mode == 'signup' %}
+          Already have an account? <a href="{% url 'login' %}">Sign in</a>
+        {% else %}
+          Don't have an account? <a href="{% url 'signup' %}">Create one</a>
+        {% endif %}
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

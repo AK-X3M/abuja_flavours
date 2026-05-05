@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+{% block title %}Checkout — Abuja Flavours{% endblock %}
+
+{% block content %}
+<div class="checkout-page">
+  <div class="container">
+
+    <div class="checkout-header">
+      <h1 class="page-title">Checkout</h1>
+      <div class="checkout-steps">
+        <div class="step step--done">Cart</div>
+        <div class="step-arrow">→</div>
+        <div class="step step--active">Payment</div>
+        <div class="step-arrow">→</div>
+        <div class="step">Confirmed</div>
+      </div>
+    </div>
+
+    <div class="checkout-layout">
+
+      <!-- Payment Form -->
+      <div class="checkout-form-panel">
+        <h2 class="panel-title">Payment Details</h2>
+
+        {% if messages %}
+          {% for message in messages %}
+          <div class="alert alert--{{ message.tags }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+
+        <form method="POST" class="payment-form" id="paymentForm">
+          {% csrf_token %}
+
+          <div class="payment-methods">
+            <label class="payment-option" id="optionEcocash">
+              <input type="radio" name="payment_method" value="ecocash" checked>
+              <div class="payment-option__content">
+                <span class="payment-icon">📱</span>
+                <div>
+                  <strong>EcoCash</strong>
+                  <small>Mobile money payment</small>
+                </div>
+                <span class="payment-check">✓</span>
+              </div>
+            </label>
+            <label class="payment-option" id="optionCard">
+              <input type="radio" name="payment_method" value="card">
+              <div class="payment-option__content">
+                <span class="payment-icon">💳</span>
+                <div>
+                  <strong>Credit Card</strong>
+                  <small>Visa, Mastercard accepted</small>
+                </div>
+                <span class="payment-check">✓</span>
+              </div>
+            </label>
+          </div>
+
+          <!-- EcoCash Fields -->
+          <div id="ecocashFields" class="payment-fields">
+            <div class="form-group">
+              <label class="form-label">EcoCash Number</label>
+              <input type="tel" name="payment_reference" id="ecocashNum" class="form-input" placeholder="e.g. 0771234567">
+            </div>
+            <div class="form-group">
+              <label class="form-label">PIN (simulation)</label>
+              <input type="password" id="ecocashPin" class="form-input" placeholder="••••" maxlength="4">
+              <small class="form-hint">This is a simulation — your real PIN is not stored.</small>
+            </div>
+          </div>
+
+          <!-- Card Fields -->
+          <div id="cardFields" class="payment-fields" style="display:none;">
+            <div class="form-group">
+              <label class="form-label">Card Number</label>
+              <input type="text" name="payment_reference" id="cardNum" class="form-input" placeholder="•••• •••• •••• ••••" maxlength="19">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Expiry</label>
+                <input type="text" class="form-input" placeholder="MM/YY" maxlength="5">
+              </div>
+              <div class="form-group">
+                <label class="form-label">CVV</label>
+                <input type="text" class="form-input" placeholder="•••" maxlength="3">
+              </div>
+            </div>
+            <small class="form-hint">Card simulation — no real charges will be made.</small>
+          </div>
+
+          <button type="submit" class="btn btn--primary btn--full btn--lg" id="payBtn">
+            Pay ${{ net_total }} →
+          </button>
+        </form>
+      </div>
+
+      <!-- Order Summary -->
+      <div class="checkout-summary">
+        <h2 class="panel-title">Your Order</h2>
+        <div class="checkout-items">
+          {% for item in cart_items %}
+          <div class="checkout-item">
+            <div class="checkout-item__info">
+              <img
+                src="{{ item.meal.image_url }}"
+                alt="{{ item.meal.name }}"
+                class="checkout-item__img"
+                onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100&q=80'"
+              >
+              <div>
+                <strong>{{ item.meal.name }}</strong>
+                <span class="qty-badge">× {{ item.quantity }}</span>
+              </div>
+            </div>
+            <span class="checkout-item__price">${{ item.subtotal }}</span>
+          </div>
+          {% endfor %}
+        </div>
+        <div class="checkout-totals">
+          <div class="total-row">
+            <span>Subtotal</span><span>${{ gross_total }}</span>
+          </div>
+          <div class="total-row">
+            <span>Tax (15%)</span><span>${{ tax }}</span>
+          </div>
+          <div class="total-row total-row--final">
+            <span>Total</span><span>${{ net_total }}</span>
+          </div>
+        </div>
+        <div class="checkout-trust">
+          <span>🔒 Secure Payment</span>
+          <span>🚀 Instant Confirmation</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const ecocashOption = document.getElementById('optionEcocash');
+const cardOption = document.getElementById('optionCard');
+const ecocashFields = document.getElementById('ecocashFields');
+const cardFields = document.getElementById('cardFields');
+
+function updatePaymentUI() {
+  const ecocashSelected = document.querySelector('input[value="ecocash"]').checked;
+  ecocashFields.style.display = ecocashSelected ? 'block' : 'none';
+  cardFields.style.display = ecocashSelected ? 'none' : 'block';
+  ecocashOption.classList.toggle('payment-option--selected', ecocashSelected);
+  cardOption.classList.toggle('payment-option--selected', !ecocashSelected);
+  
+  // Swap name attribute so only active field submits
+  document.getElementById('ecocashNum').name = ecocashSelected ? 'payment_reference' : '';
+  document.getElementById('cardNum').name = ecocashSelected ? '' : 'payment_reference';
+}
+
+document.querySelectorAll('input[name="payment_method"]').forEach(r => r.addEventListener('change', updatePaymentUI));
+updatePaymentUI();
+
+// Format card number
+document.getElementById('cardNum').addEventListener('input', function() {
+  this.value = this.value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim().slice(0, 19);
+});
+
+// Pay button loading state
+document.getElementById('paymentForm').addEventListener('submit', function() {
+  const btn = document.getElementById('payBtn');
+  btn.textContent = 'Processing...';
+  btn.disabled = true;
+  btn.classList.add('loading');
+});
+</script>
+{% endblock %}

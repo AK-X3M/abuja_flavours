@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% block title %}Order Confirmed! — Abuja Flavours{% endblock %}
+
+{% block content %}
+<div class="confirmation-page">
+  <div class="container">
+    <div class="confirmation-card">
+
+      <div class="confirmation-top">
+        <div class="confirm-icon" id="confirmIcon">✓</div>
+        <h1 class="confirm-title">Order Confirmed!</h1>
+        <p class="confirm-subtitle">
+          Thank you, <strong>{{ order.user.username }}</strong>! Your food is being prepared with love.
+        </p>
+        <div class="confirm-order-num">Order #{{ order.id }}</div>
+      </div>
+
+      <div class="confirmation-body">
+
+        <div class="confirm-section">
+          <h3>Items Ordered</h3>
+          <div class="confirm-items">
+            {% for item in order.items.all %}
+            <div class="confirm-item">
+              <span>{{ item.meal_name }} <span class="qty-badge">× {{ item.quantity }}</span></span>
+              <span>${{ item.subtotal }}</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="confirm-section confirm-totals">
+          <div class="total-row">
+            <span>Subtotal</span><span>${{ order.gross_total }}</span>
+          </div>
+          <div class="total-row">
+            <span>Tax (15%)</span><span>${{ order.tax }}</span>
+          </div>
+          <div class="total-row total-row--final">
+            <span>Total Paid</span><span>${{ order.net_total }}</span>
+          </div>
+        </div>
+
+        <div class="confirm-section confirm-payment">
+          <h3>Payment</h3>
+          <div class="payment-info">
+            {% if order.payment_method == 'ecocash' %}
+            <span class="payment-badge payment-badge--ecocash">📱 EcoCash</span>
+            {% else %}
+            <span class="payment-badge payment-badge--card">💳 Credit Card</span>
+            {% endif %}
+            <span class="payment-ref">Ref: {{ order.payment_reference }}</span>
+          </div>
+        </div>
+
+        <div class="confirm-status">
+          <div class="status-track">
+            <div class="status-step status-step--done">
+              <div class="status-dot"></div>
+              <span>Confirmed</span>
+            </div>
+            <div class="status-line status-line--done"></div>
+            <div class="status-step status-step--active">
+              <div class="status-dot"></div>
+              <span>Preparing</span>
+            </div>
+            <div class="status-line"></div>
+            <div class="status-step">
+              <div class="status-dot"></div>
+              <span>Ready</span>
+            </div>
+            <div class="status-line"></div>
+            <div class="status-step">
+              <div class="status-dot"></div>
+              <span>Delivered</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="confirmation-actions">
+        <a href="{% url 'menu' %}" class="btn btn--primary btn--lg">Order Again</a>
+        <a href="{% url 'landing' %}" class="btn btn--ghost">Back to Home</a>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Animate the check icon on load
+window.addEventListener('load', () => {
+  document.getElementById('confirmIcon').classList.add('confirm-icon--animate');
+});
+</script>
+{% endblock %}

@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% load dict_extras %}
+{% block title %}Menu — Abuja Flavours{% endblock %}
+
+{% block content %}
+<div class="menu-page">
+
+  <div class="menu-header">
+    <div class="container">
+      <h1 class="page-title">Our <em>Menu</em></h1>
+      <p class="page-subtitle">Fresh, authentic, delivered with love.</p>
+    </div>
+  </div>
+
+  <div class="container menu-container">
+
+    <!-- Category Tabs -->
+    <nav class="cat-tabs" role="tablist">
+      <a href="{% url 'menu' %}" class="cat-tab {% if not active_category %}cat-tab--active{% endif %}">
+        <span>🍽</span> All
+      </a>
+      {% for category in categories %}
+      <a href="{% url 'menu' %}?category={{ category.slug }}"
+         class="cat-tab {% if active_category == category.slug %}cat-tab--active{% endif %}">
+        <span>{{ category.icon }}</span> {{ category.name }}
+      </a>
+      {% endfor %}
+    </nav>
+
+    <!-- Meals Grid -->
+    <div class="meals-grid" id="mealsGrid">
+      {% for meal in meals %}
+      <article class="meal-card" data-meal-id="{{ meal.id }}">
+        <div class="meal-card__img-wrap">
+          <img
+            src="{{ meal.image_url }}"
+            alt="{{ meal.name }}"
+            class="meal-card__img"
+            loading="lazy"
+            onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80'"
+          >
+          <div class="meal-card__category-badge">{{ meal.category.icon }} {{ meal.category.name }}</div>
+        </div>
+        <div class="meal-card__body">
+          <h3 class="meal-card__name">{{ meal.name }}</h3>
+          <p class="meal-card__desc">{{ meal.description }}</p>
+          <div class="meal-card__footer">
+            <span class="meal-card__price">${{ meal.price }}</span>
+            <div class="meal-card__actions">
+              {% if meal.id in cart_dict %}
+              <div class="qty-control" id="qtyControl{{ meal.id }}">
+                <span class="qty-label">In cart: <strong>{{ cart_dict|get_item:meal.id }}</strong></span>
+              </div>
+              {% endif %}
+              <button
+                class="btn btn--primary btn--sm add-to-cart-btn"
+                data-meal-id="{{ meal.id }}"
+                data-meal-name="{{ meal.name }}"
+              >
+                <span class="btn-icon">+</span> Add
+              </button>
+            </div>
+          </div>
+        </div>
+      </article>
+      {% empty %}
+      <div class="empty-state">
+        <span class="empty-icon">🍽</span>
+        <p>No meals in this category yet.</p>
+      </div>
+      {% endfor %}
+    </div>
+
+  </div>
+</div>
+
+<!-- CSRF Token for JS -->
+<input type="hidden" id="csrfToken" value="{{ csrf_token }}">
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+  btn.addEventListener('click', async function() {
+    const mealId = this.dataset.mealId;
+    const mealName = this.dataset.mealName;
+    const csrf = document.getElementById('csrfToken').value;
+    
+    this.classList.add('loading');
+    this.disabled = true;
+
+    try {
+      const res = await fetch(`/api/cart/add/${mealId}/`, {
+        method: 'POST',
+        headers: {'X-CSRFToken': csrf, 'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'quantity=1'
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(`✓ ${mealName} added to cart!`, 'success');
+        document.getElementById('cartBadge').textContent = data.cart_count;
+        document.getElementById('cartBadge').classList.add('bounce');
+        setTimeout(() => document.getElementById('cartBadge').classList.remove('bounce'), 400);
+        
+        // Update qty label if present
+        let qtyControl = document.getElementById(`qtyControl${mealId}`);
+        if (qtyControl) {
+          qtyControl.querySelector('strong').textContent = data.quantity;
+        } else {
+          const footer = this.closest('.meal-card__actions');
+          const div = document.createElement('div');
+          div.className = 'qty-control';
+          div.id = `qtyControl${mealId}`;
+          div.innerHTML = `<span class="qty-label">In cart: <strong>${data.quantity}</strong></span>`;
+          footer.insertBefore(div, this);
+        }
+      }
+    } catch(e) {
+      showToast('Something went wrong. Try again.', 'error');
+    } finally {
+      this.classList.remove('loading');
+      this.disabled = false;
+    }
+  });
+});
+</script>
+{% endblock %}
